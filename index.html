@@ -5,49 +5,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Portofolio Rafan</title>
     <link rel="stylesheet" href="admin-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <!-- Login Overlay -->
     <div id="login-overlay">
         <div class="login-box">
-            <h2>Login Admin</h2>
+            <div class="login-header">
+                <i class="fas fa-user-shield"></i>
+                <h2>Admin Access</h2>
+            </div>
             <form id="login-form">
                 <div class="form-group">
-                    <input type="text" name="username" placeholder="Username" required>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" name="username" placeholder="Username" required>
+                    </div>
                 </div>
                 <div class="form-group">
-                    <input type="password" name="password" placeholder="Password" required>
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="password" placeholder="Password" required>
+                    </div>
                 </div>
-                <button type="submit" class="btn-save">Login</button>
+                <button type="submit" class="btn-save">Masuk Sekarang</button>
             </form>
+            <p class="login-footer">Silakan masukkan kredensial admin Anda.</p>
         </div>
     </div>
 
     <div class="admin-container" style="display:none;">
         <aside class="sidebar">
-            <h1>Admin Panel</h1>
+            <div class="sidebar-header">
+                <i class="fas fa-code"></i>
+                <h1>Admin Panel</h1>
+            </div>
             <nav>
                 <ul>
-                    <li><a href="#profile" class="active">Profil</a></li>
-                    <li><a href="#projects">Proyek</a></li>
-                    <li><a href="#achievements">Pencapaian</a></li>
-                    <li><a href="#education">Pendidikan</a></li>
-                    <li><a href="#skills">Keterampilan</a></li>
-                    <li><a href="#documentation">Dokumentasi</a></li>
-                    <li><a href="#comments">Komentar</a></li>
+                    <li><a href="#profile" class="active"><i class="fas fa-user"></i> Profil</a></li>
+                    <li><a href="#projects"><i class="fas fa-tasks"></i> Proyek</a></li>
+                    <li><a href="#achievements"><i class="fas fa-trophy"></i> Pencapaian</a></li>
+                    <li><a href="#education"><i class="fas fa-graduation-cap"></i> Pendidikan</a></li>
+                    <li><a href="#skills"><i class="fas fa-tools"></i> Keterampilan</a></li>
+                    <li><a href="#documentation"><i class="fas fa-images"></i> Dokumentasi</a></li>
+                    <li><a href="#comments"><i class="fas fa-comments"></i> Komentar</a></li>
                 </ul>
             </nav>
-            <button class="btn-logout" onclick="logout()">Logout</button>
+            <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </aside>
 
         <main class="content">
             <header>
                 <h2 id="section-title">Edit Profil</h2>
                 <div class="api-config">
-                    <label>API URL:</label>
-                    <input type="text" id="api-url" value="https://backend-rapanportofolio.vercel.app/api">
+                    <i class="fas fa-link"></i>
+                    <input type="text" id="api-url" placeholder="API URL">
                 </div>
             </header>
+
 
             <!-- Profile Section -->
             <section id="profile-section" class="admin-section">

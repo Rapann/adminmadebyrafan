@@ -266,14 +266,13 @@ function getModalElements() {
 
 // Helper for Image Upload (Base64)
 async function handleImageUpload(inputElement, targetInputName, formId) {
-    console.log('Starting image upload for:', targetInputName);
+    console.log('Starting upload for:', targetInputName);
     const file = inputElement.files[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-        showToast('File terlalu besar! Maksimal 5MB.', 'error');
-        inputElement.value = '';
-        return;
+    // Warning for very large files
+    if (file.size > 50 * 1024 * 1024) {
+        showToast('File sangat besar (>50MB). Sangat disarankan menggunakan metode "Path" atau upload ke Cloud/YouTube agar website tidak lemot.', 'warning');
     }
 
     const reader = new FileReader();
@@ -283,11 +282,8 @@ async function handleImageUpload(inputElement, targetInputName, formId) {
         
         if (form && form[targetInputName]) {
             form[targetInputName].value = base64String;
-            console.log('Base64 applied to input:', targetInputName);
-            showToast('Foto berhasil diproses! Klik Simpan untuk menyimpan ke database.', 'success');
-        } else {
-            console.error('Form or target input not found:', targetInputName);
-            showToast('Gagal memproses foto: Input tidak ditemukan.', 'error');
+            console.log('File processed to Base64');
+            showToast('File berhasil diproses! Klik Simpan untuk menyimpan.', 'success');
         }
     };
     reader.onerror = () => showToast('Gagal membaca file!', 'error');
@@ -324,21 +320,24 @@ window.showModal = function(type, item = null) {
             </div>
             <div class="form-group"><label>Deskripsi Singkat</label><textarea name="description" required>${item?.description || ''}</textarea></div>
             <div class="form-group">
-                <label>Media (Path atau Upload)</label>
+                <label>Media (Path, Link, atau Upload)</label>
                 <div style="display:flex; gap:10px; margin-bottom:5px;">
-                    <input type="text" name="media" value="${item?.media || ''}" placeholder="assets/Website/nama-file.png" required style="flex:1;">
-                    <input type="file" accept="image/*" onchange="handleImageUpload(this, 'media')" style="display:none;" id="file-upload-project">
-                    <button type="button" onclick="document.getElementById('file-upload-project').click()" class="btn-edit" style="padding:0 15px;">Upload Foto</button>
+                    <input type="text" id="media-input" name="media" value="${item?.media || ''}" placeholder="Contoh: assets/Video/film.mp4 atau Link YouTube" required style="flex:1;">
+                    <input type="file" accept="image/*,video/*" onchange="handleImageUpload(this, 'media')" style="display:none;" id="file-upload-project">
+                    <button type="button" onclick="document.getElementById('file-upload-project').click()" class="btn-edit" style="padding:0 15px;">Pilih File</button>
                 </div>
-                <small style="color:var(--text-secondary)">Pilih file untuk upload otomatis atau ketik path manual.</small>
+                <small style="color:var(--text-secondary)">
+                    <b>PENTING:</b> Untuk video >50MB (apalagi 2GB), jangan upload! 
+                    Cukup ketik path filenya (contoh: <code>assets/Video/nama.mp4</code>) atau gunakan link YouTube/Drive.
+                </small>
             </div>
             <div class="form-group"><label>Tipe Media</label>
                 <select name="mediaType">
-                    <option value="image" ${item?.mediaType === 'image' ? 'selected' : ''}>Gambar</option>
-                    <option value="video" ${item?.mediaType === 'video' ? 'selected' : ''}>Video</option>
+                    <option value="image" ${item?.mediaType === 'image' ? 'selected' : ''}>Gambar / Foto</option>
+                    <option value="video" ${item?.mediaType === 'video' ? 'selected' : ''}>Video / Film</option>
                 </select>
             </div>
-            <div class="form-group"><label>Link Eksternal (Opsional)</label><input type="text" name="link" value="${item?.link || ''}" placeholder="https://..."></div>
+            <div class="form-group"><label>Link Detail (Opsional)</label><input type="text" name="link" value="${item?.link || ''}" placeholder="https://..."></div>
         `;
     } else if (type === 'achievement') {
         fields = `

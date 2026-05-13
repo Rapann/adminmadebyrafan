@@ -62,7 +62,12 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
             body: JSON.stringify(data)
         });
         
-        const result = await res.json();
+        let result;
+        try {
+            result = await res.json();
+        } catch (e) {
+            result = { message: 'Server error (500). Cek log Vercel.' };
+        }
 
         if (res.ok) {
             TOKEN = result.token;
@@ -70,8 +75,13 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
             showToast('Selamat datang, Admin!', 'success');
             checkAuth();
         } else {
-            showToast(result.message || 'Username atau password salah!', 'error');
+            if (res.status === 500) {
+                showToast('Server Error (500). Pastikan ENV di Vercel sudah benar.', 'error');
+            } else {
+                showToast(result.message || 'Username atau password salah!', 'error');
+            }
         }
+
     } catch (err) {
         console.error('Login error:', err);
         showToast('Gagal terhubung ke backend! Cek API URL.', 'error');

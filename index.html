@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Portofolio Rafan</title>
+    <link rel="stylesheet" href="admin-style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <aside class="sidebar">
+            <h1>Admin Panel</h1>
+            <nav>
+                <ul>
+                    <li><a href="#profile" class="active">Profil</a></li>
+                    <li><a href="#projects">Proyek</a></li>
+                    <li><a href="#achievements">Pencapaian</a></li>
+                    <li><a href="#education">Pendidikan</a></li>
+                    <li><a href="#skills">Keterampilan</a></li>
+                    <li><a href="#documentation">Dokumentasi</a></li>
+                    <li><a href="#comments">Komentar</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header>
+                <h2 id="section-title">Edit Profil</h2>
+                <div class="api-config">
+                    <label>API URL:</label>
+                    <input type="text" id="api-url" value="https://backend-rapanportofolio.vercel.app/api">
+                </div>
+            </header>
+
+            <!-- Profile Section -->
+            <section id="profile-section" class="admin-section">
+                <form id="profile-form">
+                    <div class="form-group">
+                        <label>Nama Lengkap</label>
+                        <input type="text" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Subtitle</label>
+                        <input type="text" name="subtitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Deskripsi</label>
+                        <textarea name="description" rows="5" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Quote</label>
+                        <input type="text" name="quote" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Path Foto Profil</label>
+                        <input type="text" name="profileImg" placeholder="assets/Foto Profil.png">
+                    </div>
+                    <button type="submit" class="btn-save">Simpan Perubahan</button>
+                </form>
+            </section>
+
+            <!-- Projects Section -->
+            <section id="projects-section" class="admin-section" style="display:none;">
+                <button class="btn-add" onclick="showModal('project')">Tambah Proyek Baru</button>
+                <div id="projects-list" class="data-list">
+                    <!-- Projects will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Achievements Section -->
+            <section id="achievements-section" class="admin-section" style="display:none;">
+                <button class="btn-add" onclick="showModal('achievement')">Tambah Pencapaian Baru</button>
+                <div id="achievements-list" class="data-list">
+                    <!-- Achievements will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Education Section -->
+            <section id="education-section" class="admin-section" style="display:none;">
+                <button class="btn-add" onclick="showModal('education')">Tambah Pendidikan Baru</button>
+                <div id="education-list" class="data-list">
+                    <!-- Education will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Skills Section -->
+            <section id="skills-section" class="admin-section" style="display:none;">
+                <button class="btn-add" onclick="showModal('skill')">Tambah Keterampilan Baru</button>
+                <div id="skills-list" class="data-list">
+                    <!-- Skills will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Documentation Section -->
+            <section id="documentation-section" class="admin-section" style="display:none;">
+                <button class="btn-add" onclick="showModal('documentation')">Tambah Dokumentasi Baru</button>
+                <div id="documentation-list" class="data-list">
+                    <!-- Documentation will be loaded here -->
+                </div>
+            </section>
+
+             <!-- Comments Section -->
+             <section id="comments-section" class="admin-section" style="display:none;">
+                <div id="comments-list" class="data-list">
+                    <!-- Comments will be loaded here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal for adding/editing items -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title">Tambah Item</h2>
+            <form id="modal-form">
+                <!-- Form fields will be injected here -->
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

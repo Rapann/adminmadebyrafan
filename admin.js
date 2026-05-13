@@ -9,11 +9,21 @@ const AUTO_LOGIN = {
     password: "PutraRustaman190"
 };
 
+// Update API URL whenever it changes
+function updateApiUrl() {
+    const input = document.getElementById('api-url');
+    if (input) {
+        API_URL = input.value;
+        console.log('API URL updated to:', API_URL);
+    }
+}
+
 // Auto Login Logic
 async function attemptAutoLogin() {
     if (!TOKEN && AUTO_LOGIN.enabled) {
-        console.log('Mencoba login otomatis...');
+        showToast('Mencoba login otomatis...', 'info');
         try {
+            updateApiUrl();
             const res = await fetch(`${API_URL}/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -26,52 +36,80 @@ async function attemptAutoLogin() {
             if (res.ok) {
                 TOKEN = result.token;
                 localStorage.setItem('adminToken', TOKEN);
-                document.getElementById('login-overlay').style.display = 'none';
-                document.querySelector('.admin-container').style.display = 'flex';
+                hideLoginOverlay();
                 showToast('Auto-login berhasil!', 'success');
                 switchSection('profile');
+            } else {
+                showToast('Auto-login gagal. Silakan login manual.', 'info');
+                showLoginOverlay();
             }
         } catch (err) {
             console.error('Auto-login gagal:', err);
+            showToast('Gagal terhubung ke backend.', 'error');
+            showLoginOverlay();
         }
+    } else if (!TOKEN) {
+        showLoginOverlay();
     }
 }
 
-// Auth Check
-if (TOKEN) {
-    if (document.getElementById('login-overlay')) document.getElementById('login-overlay').style.display = 'none';
-    if (document.querySelector('.admin-container')) document.querySelector('.admin-container').style.display = 'flex';
-    loadData('profile');
-} else {
-    attemptAutoLogin(); // Jalankan auto login jika belum ada token
+function showLoginOverlay() {
+    const overlay = document.getElementById('login-overlay');
+    const container = document.querySelector('.admin-container');
+    if (overlay) overlay.style.display = 'flex';
+    if (container) container.style.display = 'none';
 }
+
+function hideLoginOverlay() {
+    const overlay = document.getElementById('login-overlay');
+    const container = document.querySelector('.admin-container');
+    if (overlay) overlay.style.display = 'none';
+    if (container) container.style.display = 'flex';
+}
+
+// Auth Check
+document.addEventListener('DOMContentLoaded', () => {
+    updateApiUrl();
+    if (TOKEN) {
+        hideLoginOverlay();
+        switchSection('profile');
+    } else {
+        attemptAutoLogin();
+    }
+});
 
 // Login Form
 document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    console.log('Login form submitted');
+    showToast('Sedang login...', 'info');
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
 
     try {
+        updateApiUrl();
+        console.log('Attempting login at:', `${API_URL}/auth/login`);
         const res = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+        
+        console.log('Login response status:', res.status);
         const result = await res.json();
 
         if (res.ok) {
             TOKEN = result.token;
             localStorage.setItem('adminToken', TOKEN);
-            document.getElementById('login-overlay').style.display = 'none';
-            document.querySelector('.admin-container').style.display = 'flex';
+            hideLoginOverlay();
             showToast('Login berhasil!', 'success');
-            loadData('profile');
+            switchSection('profile');
         } else {
-            showToast(result.message || 'Login gagal', 'error');
+            showToast(result.message || 'Username atau password salah', 'error');
         }
     } catch (err) {
-        showToast('Kesalahan koneksi server', 'error');
+        console.error('Login error detail:', err);
+        showToast('Kesalahan koneksi server. Pastikan backend sudah jalan.', 'error');
     }
 });
 

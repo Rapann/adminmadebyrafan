@@ -1,5 +1,47 @@
 let API_URL = document.getElementById('api-url').value;
 let currentSection = 'profile';
+let TOKEN = localStorage.getItem('adminToken');
+
+// Auth Check
+if (TOKEN) {
+    document.getElementById('login-overlay').style.display = 'none';
+    document.querySelector('.admin-container').style.display = 'flex';
+    loadData('profile');
+}
+
+// Login Form
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+        const res = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await res.json();
+
+        if (res.ok) {
+            TOKEN = result.token;
+            localStorage.setItem('adminToken', TOKEN);
+            document.getElementById('login-overlay').style.display = 'none';
+            document.querySelector('.admin-container').style.display = 'flex';
+            showToast('Login berhasil!', 'success');
+            loadData('profile');
+        } else {
+            showToast(result.message || 'Login gagal', 'error');
+        }
+    } catch (err) {
+        showToast('Kesalahan koneksi server', 'error');
+    }
+});
+
+function logout() {
+    localStorage.removeItem('adminToken');
+    location.reload();
+}
 
 // Navigation
 document.querySelectorAll('.sidebar a').forEach(link => {
@@ -77,11 +119,15 @@ document.getElementById('profile-form').addEventListener('submit', async (e) => 
     try {
         const res = await fetch(`${API_URL}/profile`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${TOKEN}`
+            },
             body: JSON.stringify(data)
         });
         
         if (res.ok) showToast('Profil berhasil diperbarui!', 'success');
+        else if (res.status === 401) logout();
         else showToast('Gagal memperbarui profil.', 'error');
     } catch (err) {
         showToast('Terjadi kesalahan koneksi.', 'error');
@@ -178,7 +224,10 @@ modalForm.onsubmit = async (e) => {
     try {
         const res = await fetch(url, {
             method,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${TOKEN}`
+            },
             body: JSON.stringify(data)
         });
 
@@ -186,6 +235,8 @@ modalForm.onsubmit = async (e) => {
             showToast(`Data berhasil ${editingId ? 'diperbarui' : 'ditambahkan'}!`, 'success');
             closeModal();
             loadData(currentSection);
+        } else if (res.status === 401) {
+            logout();
         } else {
             showToast('Gagal menyimpan data.', 'error');
         }
@@ -208,10 +259,15 @@ async function editItem(section, id) {
 async function deleteItem(section, id) {
     if (confirm('Apakah Anda yakin ingin menghapus item ini?')) {
         try {
-            const res = await fetch(`${API_URL}/${section}/${id}`, { method: 'DELETE' });
+            const res = await fetch(`${API_URL}/${section}/${id}`, { 
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${TOKEN}` }
+            });
             if (res.ok) {
                 showToast('Data berhasil dihapus!', 'success');
                 loadData(section);
+            } else if (res.status === 401) {
+                logout();
             } else {
                 showToast('Gagal menghapus data.', 'error');
             }

@@ -255,6 +255,7 @@ document.getElementById('profile-form').addEventListener('submit', async (e) => 
 // Modal CRUD Logic
 let editingId = null;
 
+// Re-initialize modal elements just in case
 function getModalElements() {
     return {
         modal: document.getElementById('modal'),
@@ -264,13 +265,13 @@ function getModalElements() {
 }
 
 // Helper for Image Upload (Base64)
-async function handleImageUpload(inputElement, targetInputName, formId = 'modal-form') {
+async function handleImageUpload(inputElement, targetInputName, formId) {
+    console.log('Starting image upload for:', targetInputName);
     const file = inputElement.files[0];
     if (!file) return;
 
-    // Check size (max 2MB for Base64 to avoid DB bloat)
-    if (file.size > 2 * 1024 * 1024) {
-        showToast('File terlalu besar! Maksimal 2MB.', 'error');
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('File terlalu besar! Maksimal 5MB.', 'error');
         inputElement.value = '';
         return;
     }
@@ -278,18 +279,31 @@ async function handleImageUpload(inputElement, targetInputName, formId = 'modal-
     const reader = new FileReader();
     reader.onload = (e) => {
         const base64String = e.target.result;
-        const form = document.getElementById(formId);
+        const form = formId ? document.getElementById(formId) : inputElement.closest('form');
+        
         if (form && form[targetInputName]) {
             form[targetInputName].value = base64String;
-            showToast('Foto berhasil diproses!', 'success');
+            console.log('Base64 applied to input:', targetInputName);
+            showToast('Foto berhasil diproses! Klik Simpan untuk menyimpan ke database.', 'success');
+        } else {
+            console.error('Form or target input not found:', targetInputName);
+            showToast('Gagal memproses foto: Input tidak ditemukan.', 'error');
         }
     };
+    reader.onerror = () => showToast('Gagal membaca file!', 'error');
     reader.readAsDataURL(file);
 }
 
-function showModal(type, item = null) {
+// Make it global explicitly
+window.showModal = function(type, item = null) {
+    console.log('Opening modal for:', type);
     const { modal, modalForm, modalTitle } = getModalElements();
-    if (!modal || !modalForm) return;
+    
+    if (!modal || !modalForm) {
+        console.error('Modal elements not found in DOM');
+        showToast('Gagal membuka form: Elemen tidak ditemukan.', 'error');
+        return;
+    }
 
     modal.style.display = 'block';
     modalForm.innerHTML = '';
@@ -314,7 +328,7 @@ function showModal(type, item = null) {
                 <div style="display:flex; gap:10px; margin-bottom:5px;">
                     <input type="text" name="media" value="${item?.media || ''}" placeholder="assets/Website/nama-file.png" required style="flex:1;">
                     <input type="file" accept="image/*" onchange="handleImageUpload(this, 'media')" style="display:none;" id="file-upload-project">
-                    <button type="button" onclick="document.getElementById('file-upload-project').click()" class="btn-edit" style="padding:0 15px;">Upload</button>
+                    <button type="button" onclick="document.getElementById('file-upload-project').click()" class="btn-edit" style="padding:0 15px;">Upload Foto</button>
                 </div>
                 <small style="color:var(--text-secondary)">Pilih file untuk upload otomatis atau ketik path manual.</small>
             </div>
@@ -341,7 +355,7 @@ function showModal(type, item = null) {
                 <div style="display:flex; gap:10px;">
                     <input type="text" name="logo" value="${item?.logo || ''}" placeholder="assets/Logo SMANSA.png" style="flex:1;">
                     <input type="file" accept="image/*" onchange="handleImageUpload(this, 'logo')" style="display:none;" id="file-upload-edu">
-                    <button type="button" onclick="document.getElementById('file-upload-edu').click()" class="btn-edit" style="padding:0 15px;">Upload</button>
+                    <button type="button" onclick="document.getElementById('file-upload-edu').click()" class="btn-edit" style="padding:0 15px;">Upload Logo</button>
                 </div>
             </div>
         `;
@@ -353,7 +367,7 @@ function showModal(type, item = null) {
                 <div style="display:flex; gap:10px;">
                     <input type="text" name="icon" value="${item?.icon || ''}" placeholder="assets/Logo VSC.gif" style="flex:1;">
                     <input type="file" accept="image/*" onchange="handleImageUpload(this, 'icon')" style="display:none;" id="file-upload-skill">
-                    <button type="button" onclick="document.getElementById('file-upload-skill').click()" class="btn-edit" style="padding:0 15px;">Upload</button>
+                    <button type="button" onclick="document.getElementById('file-upload-skill').click()" class="btn-edit" style="padding:0 15px;">Upload Ikon</button>
                 </div>
             </div>
         `;
@@ -366,7 +380,7 @@ function showModal(type, item = null) {
                 <div style="display:flex; gap:10px;">
                     <input type="text" name="media" value="${item?.media || ''}" required style="flex:1;">
                     <input type="file" accept="image/*" onchange="handleImageUpload(this, 'media')" style="display:none;" id="file-upload-doc">
-                    <button type="button" onclick="document.getElementById('file-upload-doc').click()" class="btn-edit" style="padding:0 15px;">Upload</button>
+                    <button type="button" onclick="document.getElementById('file-upload-doc').click()" class="btn-edit" style="padding:0 15px;">Upload Foto</button>
                 </div>
             </div>
             <div class="form-group"><label>Link Drive (Opsional)</label><input type="text" name="link" value="${item?.link || ''}"></div>
@@ -376,19 +390,25 @@ function showModal(type, item = null) {
     modalForm.innerHTML = fields + '<div class="modal-footer"><button type="submit" class="btn-save">Simpan Data</button></div>';
 }
 
-// Ensure the form listener is attached correctly after DOM load
+// Modal Form Submission
 document.addEventListener('submit', async (e) => {
     if (e.target && e.target.id === 'modal-form') {
         e.preventDefault();
-        const btn = e.target.querySelector('button[type="submit"]');
-        btn.disabled = true;
-        btn.innerText = 'Menyimpan...';
+        const form = e.target;
+        const btn = form.querySelector('button[type="submit"]');
+        
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = 'Menyimpan...';
+        }
 
-        const formData = new FormData(e.target);
+        const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
         
         const url = editingId ? `${API_URL}/${currentSection}/${editingId}` : `${API_URL}/${currentSection}`;
         const method = editingId ? 'PUT' : 'POST';
+
+        console.log(`Submitting ${method} to ${url}`);
 
         try {
             const res = await fetch(url, {
@@ -408,16 +428,31 @@ document.addEventListener('submit', async (e) => {
                 showToast('Sesi habis.', 'error');
                 logout();
             } else {
-                showToast('Gagal menyimpan data!', 'error');
+                const errResult = await res.json();
+                showToast(errResult.message || 'Gagal menyimpan data!', 'error');
             }
         } catch (err) {
-            showToast('Kesalahan koneksi!', 'error');
+            console.error('Save error:', err);
+            showToast('Kesalahan koneksi ke server!', 'error');
         } finally {
-            btn.disabled = false;
-            btn.innerText = 'Simpan Data';
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = 'Simpan Data';
+            }
         }
     }
 });
+
+window.closeModal = function() {
+    const { modal } = getModalElements();
+    if (modal) modal.style.display = 'none';
+}
+
+window.onclick = function(e) {
+    const { modal } = getModalElements();
+    if (e.target == modal) closeModal();
+}
+
 
 
 async function editItem(section, id) {

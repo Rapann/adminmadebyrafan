@@ -2,14 +2,48 @@ let API_URL = document.getElementById('api-url').value;
 let currentSection = 'profile';
 let TOKEN = localStorage.getItem('adminToken');
 
+// --- CONFIG AUTO LOGIN (Ganti di sini) ---
+const AUTO_LOGIN = {
+    enabled: true, // Ubah ke true jika ingin login otomatis
+    username: "Rafan Parsa",
+    password: "PutraRustaman190"
+};
+
+// Auto Login Logic
+async function attemptAutoLogin() {
+    if (!TOKEN && AUTO_LOGIN.enabled) {
+        console.log('Mencoba login otomatis...');
+        try {
+            const res = await fetch(`${API_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    username: AUTO_LOGIN.username, 
+                    password: AUTO_LOGIN.password 
+                })
+            });
+            const result = await res.json();
+            if (res.ok) {
+                TOKEN = result.token;
+                localStorage.setItem('adminToken', TOKEN);
+                document.getElementById('login-overlay').style.display = 'none';
+                document.querySelector('.admin-container').style.display = 'flex';
+                showToast('Auto-login berhasil!', 'success');
+                switchSection('profile');
+            }
+        } catch (err) {
+            console.error('Auto-login gagal:', err);
+        }
+    }
+}
+
 // Auth Check
 if (TOKEN) {
     if (document.getElementById('login-overlay')) document.getElementById('login-overlay').style.display = 'none';
     if (document.querySelector('.admin-container')) document.querySelector('.admin-container').style.display = 'flex';
     loadData('profile');
 } else {
-    if (document.getElementById('login-overlay')) document.getElementById('login-overlay').style.display = 'flex';
-    if (document.querySelector('.admin-container')) document.querySelector('.admin-container').style.display = 'none';
+    attemptAutoLogin(); // Jalankan auto login jika belum ada token
 }
 
 // Login Form

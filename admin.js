@@ -253,15 +253,48 @@ document.getElementById('profile-form').addEventListener('submit', async (e) => 
 });
 
 // Modal CRUD Logic
-const modal = document.getElementById('modal');
-const modalForm = document.getElementById('modal-form');
 let editingId = null;
 
+function getModalElements() {
+    return {
+        modal: document.getElementById('modal'),
+        modalForm: document.getElementById('modal-form'),
+        modalTitle: document.getElementById('modal-title')
+    };
+}
+
+// Helper for Image Upload (Base64)
+async function handleImageUpload(inputElement, targetInputName, formId = 'modal-form') {
+    const file = inputElement.files[0];
+    if (!file) return;
+
+    // Check size (max 2MB for Base64 to avoid DB bloat)
+    if (file.size > 2 * 1024 * 1024) {
+        showToast('File terlalu besar! Maksimal 2MB.', 'error');
+        inputElement.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const base64String = e.target.result;
+        const form = document.getElementById(formId);
+        if (form && form[targetInputName]) {
+            form[targetInputName].value = base64String;
+            showToast('Foto berhasil diproses!', 'success');
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
 function showModal(type, item = null) {
+    const { modal, modalForm, modalTitle } = getModalElements();
+    if (!modal || !modalForm) return;
+
     modal.style.display = 'block';
     modalForm.innerHTML = '';
     editingId = item ? item._id : null;
-    document.getElementById('modal-title').innerText = item ? `Edit ${type}` : `Tambah ${type}`;
+    modalTitle.innerText = item ? `Edit ${type}` : `Tambah ${type}`;
 
     let fields = '';
     if (type === 'project') {
@@ -276,7 +309,15 @@ function showModal(type, item = null) {
                 </select>
             </div>
             <div class="form-group"><label>Deskripsi Singkat</label><textarea name="description" required>${item?.description || ''}</textarea></div>
-            <div class="form-group"><label>Path Media (Gunakan path lokal atau URL)</label><input type="text" name="media" value="${item?.media || ''}" placeholder="assets/Website/nama-file.png" required></div>
+            <div class="form-group">
+                <label>Media (Path atau Upload)</label>
+                <div style="display:flex; gap:10px; margin-bottom:5px;">
+                    <input type="text" name="media" value="${item?.media || ''}" placeholder="assets/Website/nama-file.png" required style="flex:1;">
+                    <input type="file" accept="image/*" onchange="handleImageUpload(this, 'media')" style="display:none;" id="file-upload-project">
+                    <button type="button" onclick="document.getElementById('file-upload-project').click()" class="btn-edit" style="padding:0 15px;">Upload</button>
+                </div>
+                <small style="color:var(--text-secondary)">Pilih file untuk upload otomatis atau ketik path manual.</small>
+            </div>
             <div class="form-group"><label>Tipe Media</label>
                 <select name="mediaType">
                     <option value="image" ${item?.mediaType === 'image' ? 'selected' : ''}>Gambar</option>
@@ -295,18 +336,39 @@ function showModal(type, item = null) {
         fields = `
             <div class="form-group"><label>Nama Sekolah/Institusi</label><input type="text" name="institution" value="${item?.institution || ''}" required></div>
             <div class="form-group"><label>Tingkat/Jurusan</label><input type="text" name="level" value="${item?.level || ''}" placeholder="SMK - Rekayasa Perangkat Lunak" required></div>
-            <div class="form-group"><label>Path Logo</label><input type="text" name="logo" value="${item?.logo || ''}" placeholder="assets/Logo SMANSA.png"></div>
+            <div class="form-group">
+                <label>Path Logo</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" name="logo" value="${item?.logo || ''}" placeholder="assets/Logo SMANSA.png" style="flex:1;">
+                    <input type="file" accept="image/*" onchange="handleImageUpload(this, 'logo')" style="display:none;" id="file-upload-edu">
+                    <button type="button" onclick="document.getElementById('file-upload-edu').click()" class="btn-edit" style="padding:0 15px;">Upload</button>
+                </div>
+            </div>
         `;
     } else if (type === 'skill') {
         fields = `
             <div class="form-group"><label>Nama Keterampilan</label><input type="text" name="name" value="${item?.name || ''}" required></div>
-            <div class="form-group"><label>Path Ikon/Logo</label><input type="text" name="icon" value="${item?.icon || ''}" placeholder="assets/Logo VSC.gif"></div>
+            <div class="form-group">
+                <label>Path Ikon/Logo</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" name="icon" value="${item?.icon || ''}" placeholder="assets/Logo VSC.gif" style="flex:1;">
+                    <input type="file" accept="image/*" onchange="handleImageUpload(this, 'icon')" style="display:none;" id="file-upload-skill">
+                    <button type="button" onclick="document.getElementById('file-upload-skill').click()" class="btn-edit" style="padding:0 15px;">Upload</button>
+                </div>
+            </div>
         `;
     } else if (type === 'documentation') {
         fields = `
             <div class="form-group"><label>Judul Dokumentasi</label><input type="text" name="title" value="${item?.title || ''}" required></div>
             <div class="form-group"><label>Tanggal/Keterangan</label><input type="text" name="date" value="${item?.date || ''}" required></div>
-            <div class="form-group"><label>Path Media</label><input type="text" name="media" value="${item?.media || ''}" required></div>
+            <div class="form-group">
+                <label>Path Media</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" name="media" value="${item?.media || ''}" required style="flex:1;">
+                    <input type="file" accept="image/*" onchange="handleImageUpload(this, 'media')" style="display:none;" id="file-upload-doc">
+                    <button type="button" onclick="document.getElementById('file-upload-doc').click()" class="btn-edit" style="padding:0 15px;">Upload</button>
+                </div>
+            </div>
             <div class="form-group"><label>Link Drive (Opsional)</label><input type="text" name="link" value="${item?.link || ''}"></div>
         `;
     }
@@ -314,45 +376,49 @@ function showModal(type, item = null) {
     modalForm.innerHTML = fields + '<div class="modal-footer"><button type="submit" class="btn-save">Simpan Data</button></div>';
 }
 
-modalForm.onsubmit = async (e) => {
-    e.preventDefault();
-    const btn = e.target.querySelector('button');
-    btn.disabled = true;
-    btn.innerText = 'Menyimpan...';
+// Ensure the form listener is attached correctly after DOM load
+document.addEventListener('submit', async (e) => {
+    if (e.target && e.target.id === 'modal-form') {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerText = 'Menyimpan...';
 
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
-    
-    const url = editingId ? `${API_URL}/${currentSection}/${editingId}` : `${API_URL}/${currentSection}`;
-    const method = editingId ? 'PUT' : 'POST';
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        
+        const url = editingId ? `${API_URL}/${currentSection}/${editingId}` : `${API_URL}/${currentSection}`;
+        const method = editingId ? 'PUT' : 'POST';
 
-    try {
-        const res = await fetch(url, {
-            method,
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${TOKEN}`
-            },
-            body: JSON.stringify(data)
-        });
+        try {
+            const res = await fetch(url, {
+                method,
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${TOKEN}`
+                },
+                body: JSON.stringify(data)
+            });
 
-        if (res.ok) {
-            showToast('Data berhasil disimpan!', 'success');
-            closeModal();
-            loadData(currentSection);
-        } else if (res.status === 401) {
-            showToast('Sesi habis.', 'error');
-            logout();
-        } else {
-            showToast('Gagal menyimpan data!', 'error');
+            if (res.ok) {
+                showToast('Data berhasil disimpan!', 'success');
+                closeModal();
+                loadData(currentSection);
+            } else if (res.status === 401) {
+                showToast('Sesi habis.', 'error');
+                logout();
+            } else {
+                showToast('Gagal menyimpan data!', 'error');
+            }
+        } catch (err) {
+            showToast('Kesalahan koneksi!', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Simpan Data';
         }
-    } catch (err) {
-        showToast('Kesalahan koneksi!', 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerText = 'Simpan Data';
     }
-};
+});
+
 
 async function editItem(section, id) {
     try {

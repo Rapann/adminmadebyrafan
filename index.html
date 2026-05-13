@@ -85,7 +85,11 @@
                     </div>
                     <div class="form-group">
                         <label>Path Foto Profil</label>
-                        <input type="text" name="profileImg" placeholder="assets/Foto Profil.png">
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" name="profileImg" placeholder="assets/Foto Profil.png" style="flex:1;">
+                            <input type="file" accept="image/*" onchange="handleImageUpload(this, 'profileImg', 'profile-form')" style="display:none;" id="file-upload-profile">
+                            <button type="button" onclick="document.getElementById('file-upload-profile').click()" class="btn-edit" style="padding:0 15px;">Upload</button>
+                        </div>
                     </div>
                     <button type="submit" class="btn-save">Simpan Perubahan</button>
                 </form>

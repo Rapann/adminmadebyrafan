@@ -4,9 +4,12 @@ let TOKEN = localStorage.getItem('adminToken');
 
 // Auth Check
 if (TOKEN) {
-    document.getElementById('login-overlay').style.display = 'none';
-    document.querySelector('.admin-container').style.display = 'flex';
+    if (document.getElementById('login-overlay')) document.getElementById('login-overlay').style.display = 'none';
+    if (document.querySelector('.admin-container')) document.querySelector('.admin-container').style.display = 'flex';
     loadData('profile');
+} else {
+    if (document.getElementById('login-overlay')) document.getElementById('login-overlay').style.display = 'flex';
+    if (document.querySelector('.admin-container')) document.querySelector('.admin-container').style.display = 'none';
 }
 
 // Login Form
@@ -53,12 +56,28 @@ document.querySelectorAll('.sidebar a').forEach(link => {
 });
 
 function switchSection(section) {
-    document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
-    document.getElementById(`${section}-section`).style.display = 'block';
-    document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
-    document.querySelector(`.sidebar a[href="#${section}"]`).classList.add('active');
+    console.log('Switching to section:', section);
+    const sections = document.querySelectorAll('.admin-section');
+    sections.forEach(s => {
+        s.style.display = 'none';
+    });
     
-    document.getElementById('section-title').innerText = `Edit ${section.charAt(0).toUpperCase() + section.slice(1)}`;
+    const targetSection = document.getElementById(`${section}-section`);
+    if (targetSection) {
+        targetSection.style.display = 'block';
+    } else {
+        console.error(`Section #${section}-section not found`);
+    }
+    
+    document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+    const activeLink = document.querySelector(`.sidebar a[href="#${section}"]`);
+    if (activeLink) activeLink.classList.add('active');
+    
+    const titleEl = document.getElementById('section-title');
+    if (titleEl) {
+        titleEl.innerText = `Edit ${section.charAt(0).toUpperCase() + section.slice(1)}`;
+    }
+    
     currentSection = section;
     loadData(section);
 }
@@ -281,4 +300,6 @@ function closeModal() { modal.style.display = 'none'; }
 window.onclick = (e) => { if (e.target == modal) closeModal(); }
 
 // Initial load
-loadData('profile');
+if (TOKEN) {
+    switchSection('profile');
+}
